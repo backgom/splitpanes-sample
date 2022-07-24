@@ -18,6 +18,12 @@
           >About (Popup)</a
         >
         <RouterLink to="/splitpanes">Splitpanes</RouterLink>
+        <a
+          href="#"
+          class="link"
+          @click="() => openWindow('/splitpanes?mode=popup')"
+          >Splitpanes (Popup)</a
+        >
       </nav>
     </div>
   </header>
@@ -30,7 +36,9 @@
 import HelloWorld from '@/components/HelloWorld.vue';
 
 function openWindow(url) {
-  window.open(url, 'Popup', 'width=700,height=500');
+  const hash = Date.now().toString(36);
+  // window.open(url, `popup-${hash}`, 'width=700,height=500');
+  window.open(url, `popup`, 'width=700,height=500');
 }
 </script>
 

@@ -19,23 +19,79 @@
 </template>
 
 <script setup>
-import { onMounted } from 'vue';
+// @ts-check
+import { onMounted, reactive, watch } from 'vue';
+import { useSyncState } from '@/composables/syncState';
 import gridData from '../constant/gridData';
-import RealGrid from 'realgrid';
+import RealGrid, {
+  DataFillMode,
+  GridView,
+  RowStateList,
+  RowState,
+} from 'realgrid';
 import TabComponent from '../components/tab/TabComponent.vue';
 
+const state = reactive({
+  data: [],
+  fields: [],
+  layout: [],
+  /**
+   * @type {RowStateList}
+   */
+  stateRows: {},
+});
+
+// State 동기화 설정
+const { syncState } = useSyncState(state, parentAction, childAction);
+
+// State를 동기화하는 시점에 필요한 로직 추가
+function parentAction() {
+  state.data = provider.getJsonRows(0, -1, true); // RealGrid의 현재 Data를 가져옴
+  state.stateRows = provider.getAllStateRows();
+  state.layout = gridView.saveColumnLayout(); // RealGrid의 현재 Column 상태 정보를 가져옴
+}
+
+// 부모창으로 부터 전달 받은 State를 현재 화면에 반영
+function childAction() {
+  gridView.setColumnLayout(state.layout);
+
+  provider.fillJsonData(state.data, { fillMode: DataFillMode.SET });
+
+  provider.setRowStates(
+    state.stateRows[RowState.UPDATED],
+    RowState.UPDATED,
+    false,
+    false
+  );
+  provider.setRowStates(
+    state.stateRows[RowState.DELETED],
+    RowState.DELETED,
+    false
+  );
+  provider.setRowStates(
+    state.stateRows[RowState.CREATE_AND_DELETED],
+    RowState.CREATE_AND_DELETED,
+    false
+  );
+}
+
+const provider = new RealGrid.LocalDataProvider(true);
+const provider2 = new RealGrid.LocalDataProvider(true);
+
+/**
+ * @type {GridView}
+ */
+let gridView;
+
 onMounted(() => {
-  const provider = new RealGrid.LocalDataProvider();
-  const provider2 = new RealGrid.LocalDataProvider();
   const gridViewInstance = RealGrid.getGridInstance('realgrid');
-  const gridView = gridViewInstance
+  gridView = gridViewInstance
     ? gridViewInstance
     : new RealGrid.GridView('realgrid');
   const gridView2Instance = RealGrid.getGridInstance('realgrid2');
   const gridView2 = gridView2Instance
     ? gridView2Instance
     : new RealGrid.GridView('realgrid2');
-
   gridView.setDataSource(provider);
   gridView2.setDataSource(provider2);
 
@@ -46,40 +102,58 @@ onMounted(() => {
   });
 
   provider.setFields([
+    //@ts-ignore
     { fieldName: 'no' },
+    //@ts-ignore
     { fieldName: 'id' },
+    //@ts-ignore
     { fieldName: 'pw' },
+    //@ts-ignore
     { fieldName: 'name' },
+    //@ts-ignore
     { fieldName: 'gender' },
+    //@ts-ignore
     { fieldName: 'age' },
+    //@ts-ignore
     { fieldName: 'phoneNumber' },
-
+    //@ts-ignore
     {
       fieldName: 'createdAt',
+      //@ts-ignore
       dataType: 'datetime',
       datetimeFormat: 'yyyy-MM-dd',
     },
-
+    //@ts-ignore
     { fieldName: 'statusCode' },
+    //@ts-ignore
     { fieldName: 'blocked', dataType: 'boolean' },
   ]);
 
   provider2.setFields([
+    //@ts-ignore
     { fieldName: 'no' },
+    //@ts-ignore
     { fieldName: 'id' },
+    //@ts-ignore
     { fieldName: 'pw' },
+    //@ts-ignore
     { fieldName: 'name' },
+    //@ts-ignore
     { fieldName: 'gender' },
+    //@ts-ignore
     { fieldName: 'age' },
+    //@ts-ignore
     { fieldName: 'phoneNumber' },
-
+    //@ts-ignore
     {
       fieldName: 'createdAt',
+      //@ts-ignore
       dataType: 'datetime',
       datetimeFormat: 'yyyy-MM-dd',
     },
-
+    //@ts-ignore
     { fieldName: 'statusCode' },
+    //@ts-ignore
     { fieldName: 'blocked', dataType: 'boolean' },
   ]);
 
@@ -170,27 +244,53 @@ onMounted(() => {
   ]);
 
   gridView.setColumnFilters('age', [
+    //@ts-ignore
     {
       name: 'filter1',
       text: '10대 이하',
-      tag: 10,
+      tag: '10',
       callback: ageFilter,
     },
+    //@ts-ignore
     {
       name: 'filter2',
       text: '20대 이상',
-      tag: 20,
+      tag: '20',
       callback: ageFilter,
     },
   ]);
 
-  provider.fillJsonData(gridData.rows, { fillMode: 'set' });
-  provider2.fillJsonData(gridData.rows, { fillMode: 'set' });
+  state.data = gridData.rows;
+  state.fields = [
+    { fieldName: 'no' },
+    { fieldName: 'id' },
+    { fieldName: 'pw' },
+    { fieldName: 'name' },
+    { fieldName: 'gender' },
+    { fieldName: 'age' },
+    { fieldName: 'phoneNumber' },
+
+    {
+      fieldName: 'createdAt',
+      dataType: 'datetime',
+      datetimeFormat: 'yyyy-MM-dd',
+    },
+
+    { fieldName: 'statusCode' },
+    { fieldName: 'blocked', dataType: 'boolean' },
+  ];
+
+  provider.fillJsonData(state.data, { fillMode: DataFillMode.SET });
+  provider2.fillJsonData(gridData.rows, { fillMode: DataFillMode.SET });
 });
 
-function getBlockedButton() {}
+function getBlockedButton() {
+  return false;
+}
 
-function ageFilter() {}
+function ageFilter() {
+  return false;
+}
 </script>
 
 <style lang="scss" scoped>
@@ -198,6 +298,7 @@ function ageFilter() {}
   max-width: 600px;
   height: 400px;
 }
+
 .splitpanes__pane {
   display: flex;
   justify-content: center;
