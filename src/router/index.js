@@ -6,6 +6,14 @@ import HomeView from '../views/HomeView.vue';
 const routes = [
   {
     path: '/',
+    name: 'splash',
+    component: () => import('@/views/SplashView.vue'),
+    meta: {
+      layout: 'LogoLayout',
+    },
+  },
+  {
+    path: '/home',
     name: 'home',
     component: HomeView,
     meta: {
