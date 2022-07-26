@@ -11,7 +11,7 @@ import { useRoute } from 'vue-router';
 const route = useRoute();
 const layout = computed(() => {
   return route.path === '/'
-    ? 'LogoLayout'
+    ? 'EmptyLayout'
     : route.meta.layout || 'DefaultLayout';
 });
 </script>

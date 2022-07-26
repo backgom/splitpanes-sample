@@ -9,7 +9,7 @@ const routes = [
     name: 'splash',
     component: () => import('@/views/SplashView.vue'),
     meta: {
-      layout: 'LogoLayout',
+      layout: 'EmptyLayout',
     },
   },
   {
